@@ -1,0 +1,1 @@
+Creating form with validation using HTML, CSS, JS. Livecoding. And in parallel practice with git commands.
