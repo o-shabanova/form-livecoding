@@ -14,8 +14,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let error = formValidate(form);
 
-        if (error === 0) {
+        //get form data and then also get img
+        let formData = new FormData(form);
+        formData.append('image', formImage.files[0]);
 
+        if (error === 0) {
+            form.classList.add('_sending');
+            let response = await fetch ('sendmail.php', {
+                method: 'POST',
+                body: formData
+            });
+            if (response.ok) {
+                let result = await response.json();
+                alert(result.message);
+                formPreview.innerHTML = '';
+                form.reset();
+                //remove class to get out of here "loading gif"
+                form.classList.remove('_sending');
+            } else {
+                alert("Error!");
+                form.classList.remove('_sending');
+            }
         } else {
             alert("Please, fill required field!");
         }
@@ -25,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let error = 0;
         //ця зминна буде вказувати на всі елементи з класом _req, це будуть елементи які ОБОВ'ЯЗКОВО треба буде заповнчтч
         let formReq = document.querySelectorAll('._req');
-        //за допомогою цикла, ми будемо перебирати кожний елемент з _req класом і перевіряти вимоги
+        //за допомогою циклу, ми будемо перебирати кожний елемент з _req класом і перевіряти вимоги
         for (let index = 0; index < formReq.length; index++) {
             const input = formReq[index];
 
@@ -63,9 +82,42 @@ document.addEventListener('DOMContentLoaded', function () {
         input.parentElement.classList.remove('_error');
         input.classList.remove('_error');
     }
-    //Функція теста email, перевіряємо чи email відповідає нашим вимогам
+    //Функція для тестування email, перевіряємо чи email відповідає нашим вимогам
     function emailTest(input) {
         return !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,8})+$/.test(input.value);
     }
 
-})
+    //Отримуємо input file в змінну
+     const formImage = document.getElementById('formImage');
+    //Get div preview in variable
+    const formPreview = document.getElementById("formPreview");
+
+    //Hear changes in input file
+    formImage.addEventListener("change", () => {
+        uploadFile(formImage.files[0]);
+    });
+
+    function uploadFile(file) {
+        //check type of file
+        if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+            alert('Allowed only images.');
+            formImage.value = '';
+            return;
+        }
+        //check file sze (< 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert ("File must be less than 2 MB.");
+            return;
+        }
+        //display file on screen
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            formPreview.innerHTML = `<img src="${e.target.result} alt="Image">`;
+        };
+        reader.onerror = function (e) {
+            alert("Error");
+        };
+        reader.readAsDataURL(file);
+    }
+
+});
